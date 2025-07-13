@@ -9,10 +9,14 @@ from collections import defaultdict
 # next, c++ files
 # find all assembly sections
 
+target64 = '-target x86_64-unknown-none-elf'
+target32 = '-target i386-unknown-none-elf'
+
 def compileAsmNT(src_path, out_path):
     try:
         subprocess.run([
-            'powershell', '-command', 'as',
+            'powershell', '-command', 'clang', target32, 
+            '-ffreestanding', '-c',
             src_path,
             '-o', out_path
         ], check=True)
@@ -24,30 +28,15 @@ def compileAsmNT(src_path, out_path):
 def compileCppNT(src_path, out_path):
     try:
         subprocess.run([
-            'powershell', '-command', 'gcc', ' -ffreestanding',' -nostdlib',' -mno-red-zone',' -fno-exceptions',' -fno-rtti',' -fno-builtin',' -m64 ', src_path,
+            'powershell', '-command', 'clang++', 
+            ' -ffreestanding',' -nostdlib',' -mno-red-zone',' -fno-exceptions',' -fno-rtti',' -fno-builtin',
+            target32, '-c',
+            src_path,
             ' -o ', out_path
         ], check=True)
         print(f"[+] Compiled: {src_path} -> {out_path}")
     except subprocess.CalledProcessError as e:
         print(f"[!] Failed to compile {src_path}: {e}")
-
-
-# def list_sections(obj_path):
-#     """
-#     List sections of an object/binary using readelf.
-#     """
-#     try:
-#         result = subprocess.run(
-#             ['readelf', '-S', obj_path],
-#             check=True,
-#             stdout=subprocess.PIPE,
-#             stderr=subprocess.PIPE,
-#             text=True
-#         )
-#         print(f"\n=== Sections for {obj_path} ===")
-#         print(result.stdout)
-#     except subprocess.CalledProcessError as e:
-#         print(f"[!] Failed to list sections for {obj_path}: {e.stderr}")
 
 obj_files = defaultdict(list)
 BuildDir = "build\\"
@@ -96,17 +85,13 @@ if os.name == 'nt':
         if os.path.exists(linkPath):
             try:
                 subprocess.run([
-                    'powershell', '-command', 'gcc', '-T', linkPath,
-                    '-o', BinDir + '\\' + dir + '.bin', '-ffreestanding', '-O2', '-nostdlib',
-                    *(obj_files[dir]), '-lgcc'
+                    'powershell', '-command', 'clang', target32,' -nostdlib -ffreestanding',
+                    *(obj_files[dir]),
+                      '-T', linkPath,
+                      '-Wl -e _start',
+                    '-o', BinDir + '\\' + dir + '.bin'
                 ], check=True)
-                print(f"[+] Linked: {localBuildDir} -> {BinDir}.bin")
+                print(f"[+] Linked: {localBuildDir} -> {BinDir}{dir}.bin")
             except subprocess.CalledProcessError as e:
                 print(f"[!] Failed to link {localBuildDir}: {e}")
     shutil.copyfile('grub.cfg', grubDir + '//grub.cfg')
-    # # List sections of each object file
-    # for obj in obj_files:
-    #     if os.path.exists(obj):
-    #         list_sections(obj)
-    #     else:
-    #         print(f"[!] Object file not found: {obj}")
