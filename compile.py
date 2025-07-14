@@ -2,6 +2,7 @@ import os
 import subprocess
 import argparse
 import shutil
+from pathlib import Path
 from collections import defaultdict
 
 
@@ -9,89 +10,104 @@ from collections import defaultdict
 # next, c++ files
 # find all assembly sections
 
-target64 = '-target x86_64-unknown-none-elf'
-target32 = '-target i386-unknown-none-elf'
-
-def compileAsmNT(src_path, out_path):
+def compileAsmLinux(src_path, out_path):
+    commands = [
+        'nasm', '-f elf64',
+        src_path,
+        '-o', out_path
+    ]
     try:
-        subprocess.run([
-            'powershell', '-command', 'clang', target32, 
-            '-ffreestanding', '-c',
-            src_path,
-            '-o', out_path
-        ], check=True)
+        subprocess.run(commands, check=True)
         print(f"[+] Assembled: {src_path} -> {out_path}")
     except subprocess.CalledProcessError as e:
         print(f"[!] Failed to assemble {src_path}: {e}")
+        print(f"    Command: {' '.join(commands)}")
 
 
-def compileCppNT(src_path, out_path):
+def compileCppLinux(src_path, out_path):
+    commands = [
+        'clang++', 
+        '-ffreestanding','-nostdlib','-mno-red-zone','-fno-exceptions','-fno-rtti','-fno-builtin',
+        '-c',
+        src_path,
+        '-o', out_path
+    ]
     try:
-        subprocess.run([
-            'powershell', '-command', 'clang++', 
-            ' -ffreestanding',' -nostdlib',' -mno-red-zone',' -fno-exceptions',' -fno-rtti',' -fno-builtin',
-            target32, '-c',
-            src_path,
-            ' -o ', out_path
-        ], check=True)
+        subprocess.run(commands, check=True)
         print(f"[+] Compiled: {src_path} -> {out_path}")
     except subprocess.CalledProcessError as e:
         print(f"[!] Failed to compile {src_path}: {e}")
+        print(f"    Command: {' '.join(commands)}")
+
+def linkLinux(linkScript, objFiles, output):
+    commands = [
+        'ld', '-n',
+        '-T', linkScript,
+        *(objFiles),
+        '-o', output
+    ]
+    try:
+        subprocess.run(commands, check=True)
+        print(f"[+] Linked: {Path(objFiles[0]).parent} -> {output}")
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Failed to link {Path(objFiles[0]).parent}: {e}")
+        print(f"    Command: {' '.join(commands)}")
 
 obj_files = defaultdict(list)
-BuildDir = "build\\"
-BinDir = "bin\\"
-grubDir = "bin\\boot\\grub\\"
-SourceDirs = ["volta"]
 
-if not os.path.exists(BuildDir):
-    os.makedirs(BuildDir)
+BUILD_DIR = Path("build")
+BIN_DIR   = Path("bin")
+ISO_DIR   = Path("iso")
+GRUB_DIR  = Path("bin/boot/grub")
+SRC_DIR   = Path("src")
 
-if not os.path.exists(BinDir):
-    os.makedirs(BinDir)
+if not BIN_DIR.exists():
+    BIN_DIR.mkdir(parents=True, exist_ok=True)
 
-if not os.path.exists(grubDir):
-    os.makedirs(grubDir)
+if not ISO_DIR.exists():
+    ISO_DIR.mkdir(parents=True, exist_ok=True)
 
-if os.name == 'nt':
+if not GRUB_DIR.exists():
+    GRUB_DIR.mkdir(parents=True, exist_ok=True)
+
+if os.name == 'posix':
     #Walk directory and process .asm files
-    for root_dir in SourceDirs:
-        for dirpath, _, filenames in os.walk(root_dir):
-            if not os.path.exists(BuildDir + dirpath):
-                os.makedirs(BuildDir + dirpath)
-            for fname in filenames:
-                if fname.lower().endswith('.asm'):
-                    src = os.path.join(dirpath, fname)
-                    obj = BuildDir + os.path.splitext(src)[0] + '.o'
-                    compileAsmNT(src, obj)
-                    obj_files[root_dir].append(obj)
+    for srcdir in SRC_DIR.iterdir():
+        # foreach dir, create build/dir
+        # create object files
+        # link files with output to bin/dir.bin
+        if not srcdir.is_dir():
+            continue
+        
+        print(f"Processing directory: {srcdir}")
+        buildSubdir = BUILD_DIR / srcdir.name
+        binFile     = BIN_DIR / f"{srcdir.name}.bin"
+        objFiles    = []
+                
+        if not buildSubdir.exists():
+            buildSubdir.mkdir(parents=True, exist_ok=True)
+        
+        for file in srcdir.rglob('*'):
+            if file.suffix == ".cpp": 
+                obj = buildSubdir / file.with_suffix(".o").name
+                compileCppLinux(str(file), str(obj))
+                objFiles.append(str(obj))
+            if file.suffix == ".asm": 
+                obj = buildSubdir / file.with_suffix(".o").name
+                compileAsmLinux(str(file) , str(obj))
+                objFiles.append(str(obj))
 
-    # Walk directory and process .cpp files
-    for root_dir in SourceDirs:
-        for dirpath, _, filenames in os.walk(root_dir):
-            if not os.path.exists(BuildDir + dirpath):
-                os.makedirs(BuildDir + dirpath)
-            for fname in filenames:
-                if fname.lower().endswith('.cpp'):
-                    src = os.path.join(dirpath, fname)
-                    obj = BuildDir + os.path.splitext(src)[0] + '.o'
-                    compileCppNT(src, obj)
-                    obj_files[root_dir].append(obj)
+        if objFiles and Path(srcdir / 'linker.ld').exists():
+            linkLinux(str(srcdir / 'linker.ld'), objFiles, binFile)
+        else:
+            print(f"[!] No object files found in {srcdir}, skipping linking.")
 
-    for dir in SourceDirs:
-        linkFile = 'link.ld'
-        linkPath = os.path.join(dir, linkFile)
-        localBuildDir = BuildDir + dir
-        if os.path.exists(linkPath):
-            try:
-                subprocess.run([
-                    'powershell', '-command', 'clang', target32,' -nostdlib -ffreestanding',
-                    *(obj_files[dir]),
-                      '-T', linkPath,
-                      '-Wl -e _start',
-                    '-o', BinDir + '\\' + dir + '.bin'
-                ], check=True)
-                print(f"[+] Linked: {localBuildDir} -> {BinDir}{dir}.bin")
-            except subprocess.CalledProcessError as e:
-                print(f"[!] Failed to link {localBuildDir}: {e}")
-    shutil.copyfile('grub.cfg', grubDir + '//grub.cfg')
+    shutil.copyfile('grub.cfg', GRUB_DIR / 'grub.cfg')
+
+    try:
+        subprocess.run(['sh', './check.sh'], check=True)
+
+        subprocess.run(['grub-mkrescue', '-o', 'iso/ambarOS.iso', BIN_DIR], check=True)
+        print("[+] Created ambarOS.iso")
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Failed to create ISO: {e}")

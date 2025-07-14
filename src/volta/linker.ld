@@ -1,15 +1,16 @@
-ENTRY(_start)
+ENTRY(start)
 
-SECTIONS
-{
-	. = 2M;
+SECTIONS {
+    . = 2M;
 
-	/* First put the multiboot header, as it is required to be put very early
-	   in the image or the bootloader won't recognize the file format.
-	   Next we'll put the .text section. */
-	.text BLOCK(4K) : ALIGN(4K) 
+    .boot :
+    {
+        /* ensure that the multiboot header is at the beginning */
+        *(.multiboot_header)
+    }
+
+    .text BLOCK(4K) : ALIGN(4K)
 	{
-		*(.multiboot)
 		*(.text)
 	}
 

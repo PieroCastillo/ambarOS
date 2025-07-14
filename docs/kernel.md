@@ -1,4 +1,4 @@
-# ambarOS kernel: 
+# ambarOS kernel: volta
 
 Responsabilities:
 - Processes creation/destruction

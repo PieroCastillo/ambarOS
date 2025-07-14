@@ -1,5 +1,5 @@
-if grub-file --is-x86-multiboot bin/volta.bin; then
-  echo multiboot confirmed
+if grub-file --is-x86-multiboot2 bin/volta.bin; then
+  echo [+] Multiboot confirmed
 else
-  echo the file is not multiboot
+  echo [-] The file is not a valid multiboot file
 fi
