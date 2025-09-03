@@ -1,5 +1,6 @@
 #ifndef AMBAROS_KERNEL_H
 #define AMBAROS_KERNEL_H
+#define SYSCALL
 /*
 using Process = unsigned long;
 using Thread = unsigned long;
