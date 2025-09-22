@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if grub-file --is-x86-multiboot2 bin/volta.bin
 then
   echo [+] Multiboot confirmed
