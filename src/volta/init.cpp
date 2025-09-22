@@ -113,6 +113,13 @@ ambarOSfn void kernelMain(void)
 	terminalWriteline("volta kernel alpha v0.0.1");
 	terminalWriteline("Hello, World!");
 	terminalWriteline("MENA OLA!");
+
+	/* TODOS:
+	- Dynamic Memory Allocation / Paging
+	- Interrupts
+	- Keyboard Input
+	*/
+
 	while (1)
 		asm("hlt");
 }

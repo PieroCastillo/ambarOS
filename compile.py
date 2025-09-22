@@ -70,6 +70,13 @@ if not ISO_DIR.exists():
 if not GRUB_DIR.exists():
     GRUB_DIR.mkdir(parents=True, exist_ok=True)
 
+
+platformDirList = {
+    "X86_64" : "platform/x86_64", 
+    "ARM" : "platform/arm"
+    }
+platformDIR = platformDirList['X86_64']
+
 if os.name == 'posix':
     #Walk directory and process .asm files
     for srcdir in SRC_DIR.iterdir():
@@ -92,6 +99,8 @@ if os.name == 'posix':
                 obj = buildSubdir / file.with_suffix(".o").name
                 compileCppLinux(str(file), str(obj))
                 objFiles.append(str(obj))
+
+        for file in (srcdir/platformDIR).rglob('*'):
             if file.suffix == ".asm": 
                 obj = buildSubdir / file.with_suffix(".o").name
                 compileAsmLinux(str(file) , str(obj))
