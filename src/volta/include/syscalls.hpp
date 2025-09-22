@@ -9,14 +9,17 @@ Description:
 #define SYSCALLS_HPP
 
 #include "types.hpp"
-/*
-void CreateProcess(Process* process);
-void RunProcess(Process* process);
-void DestroyProcess(Process* process);
+namespace Volta::Syscalls
+{
+    /*
+    void CreateProcess(Process* process);
+    void RunProcess(Process* process);
+    void DestroyProcess(Process* process);
 
-void CreateFutex(Mutex* mutex);
-void AcquireFutex(Mutex* mutex);
-void ReleaseFutex(Mutex* mutex);
-void DestroyFutex(Mutex* mutex);
-*/
+    void CreateFutex(Mutex* mutex);
+    void AcquireFutex(Mutex* mutex);
+    void ReleaseFutex(Mutex* mutex);
+    void DestroyFutex(Mutex* mutex);
+    */
+}
 #endif // SYSCALLS_HPP

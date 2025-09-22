@@ -10,15 +10,17 @@ Description:
 
 #include <cstdint>
 
-using Process = uint64_t;
-using Thread = uint64_t;
-using Mutex = uint64_t;
-using Address = uint64_t;
-
-enum ResultType
+namespace Volta
 {
-    Success,
-    Error,
-};
+    using Process = uint64_t;
+    using Thread = uint64_t;
+    using Mutex = uint64_t;
+    using Address = uint64_t;
 
+    enum ResultType
+    {
+        Success,
+        Error,
+    };
+}
 #endif // TYPES_HPP

@@ -12,15 +12,20 @@ Notes:
 
 #include "types.hpp"
 
-extern "C" void flushTLB();
-extern "C" void flushTLBEntry(Address vaddr);
-extern "C" void switchPageTableContext(Address addr); 
+namespace Volta::Platform
+{
+    /*
+    extern "C" void flushTLB();
+    extern "C" void flushTLBEntry(Address vaddr);
+    extern "C" void switchPageTableContext(Address addr);
 
-extern "C" void enableInterrupts();
-extern "C" void disableInterrupts();
-extern "C" void halt();
- 
-extern "C" void flushRegisters();
+    extern "C" void enableInterrupts();
+    extern "C" void disableInterrupts();
+    */
+    extern "C" void halt();
 
-
+    /*
+    extern "C" void flushRegisters();
+    */
+}
 #endif // PLATFORM_HPP

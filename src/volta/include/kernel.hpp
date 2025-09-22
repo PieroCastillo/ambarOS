@@ -10,10 +10,14 @@ Description:
 
 #include "types.hpp"
 #include "platform.hpp"
-/*
-auto vAllocatePage(uint32_t count, uint32_t flags) -> Address;
-auto vReleasePage(Address vAddress) -> ResultType;
+
+namespace Volta
+{
+    /*
+    auto vAllocatePage(uint32_t count, uint32_t flags) -> Address;
+    auto vReleasePage(Address vAddress) -> ResultType;
 
 
-*/
+    */
+}
 #endif // KERNEL_HPP

@@ -2,7 +2,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <kernel.hpp>
+
 #define ambarOSfn extern "C"
+
 
 /* Hardware text mode color constants. */
 enum vga_color
@@ -121,5 +124,5 @@ ambarOSfn void kernelMain(void)
 	*/
 
 	while (1)
-		asm("hlt");
+	  	Volta::Platform::halt();
 }
