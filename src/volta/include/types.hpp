@@ -1,24 +1,27 @@
+/*
+============================================================================
+File: types.hpp
+Description:
+    This file contains types used by the Volta kernel.
+============================================================================
+*/
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-#include <stdint.h>
+#include <cstdint>
 
-using Process = unsigned long;
-using Thread = unsigned long;
-using Mutex = unsigned long;
-using File = unsigned long;
-using Address = void*;
-
-enum Result
+namespace Volta
 {
-    Success,
-    Error,
-    OutOfMemory,
-};
+    using Process = uint64_t;
+    using Thread = uint64_t;
+    using Futex = uint64_t;
+    using Address = uint64_t;
 
-struct VString {
-    const char* data;
-    size_t size;
-};
-
-#endif //TYPES_HPP
+    enum ResultType
+    {
+        Success,
+        Error,
+        OutOfMemory,
+    };
+}
+#endif // TYPES_HPP

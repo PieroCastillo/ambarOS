@@ -1,37 +1,30 @@
+/*
+============================================================================
+File: syscalls.hpp
+Description:
+    This file defines system calls.
+============================================================================
+*/
 #ifndef SYSCALLS_HPP
 #define SYSCALLS_HPP
 
-#define SYSCALL
-
-/*
-system calls
-*/
-
 #include "types.hpp"
 
-namespace AmbarOS::Volta {
-
-
+namespace Volta::Syscalls
+{
     /*
-    Processes
-    Memory Pools
-    Channels
+    auto CreateProcess(Process* process) -> Result;
+    auto RunProcess(Process* process) -> Result;
+    auto DestroyProcess(Process* process) -> Result;
+
+    auto CreateChannel() -> Result;
+    auto DestroyChannel() -> Result;
+
+    auto CreateFutex(Mutex* mutex) -> Result;
+    auto AcquireFutex(Mutex* mutex) -> Result;
+    auto ReleaseFutex(Mutex* mutex) -> Result;
+    auto DestroyFutex(Mutex* mutex) -> Result;
     */
-
-    // Threading
-    auto SYSCALL CreateProcess(Process* process)->Result;
-
-    auto SYSCALL RunProcess(Process* process)->Result;
-    auto SYSCALL DestroyProcess(Process* process)->Result;
-
-    // Memory management
-    auto SYSCALL AllocateMemory(Address address)->Result;
-    auto SYSCALL FreeMemory(Address address)->Result;
-
-    // Channels
-    auto SYSCALL CreateChannel() -> Result;
-    auto SYSCALL DestroyChannel() -> Result;
-
 }
 
 #endif // SYSCALLS_HPP

@@ -24,11 +24,11 @@ def compileAsmLinux(src_path, out_path):
         print(f"    Command: {' '.join(commands)}")
 
 
-def compileCppLinux(src_path, out_path):
+def compileCppLinux(src_path, out_path, includeDir):
     commands = [
         'clang++', 
         '-ffreestanding','-nostdlib','-mno-red-zone','-fno-exceptions','-fno-rtti','-fno-builtin',
-        '-c',
+        '-c', f'-I{includeDir}', # Include dir for headers
         src_path,
         '-o', out_path
     ]
@@ -90,6 +90,7 @@ if os.name == 'posix':
         buildSubdir = BUILD_DIR / srcdir.name
         binFile     = BIN_DIR / f"{srcdir.name}.bin"
         objFiles    = []
+        includeDir  = srcdir / "include"
                 
         if not buildSubdir.exists():
             buildSubdir.mkdir(parents=True, exist_ok=True)
@@ -97,7 +98,7 @@ if os.name == 'posix':
         for file in srcdir.rglob('*'):
             if file.suffix == ".cpp": 
                 obj = buildSubdir / file.with_suffix(".o").name
-                compileCppLinux(str(file), str(obj))
+                compileCppLinux(str(file), str(obj), str(includeDir))
                 objFiles.append(str(obj))
 
         for file in (srcdir/platformDIR).rglob('*'):
