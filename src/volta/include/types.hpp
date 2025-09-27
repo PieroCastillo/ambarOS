@@ -14,6 +14,7 @@ namespace Volta
 {
     using Process = uint64_t;
     using Thread = uint64_t;
+    using Channel = uint64_t;
     using Futex = uint64_t;
     using Address = uint64_t;
 

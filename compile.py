@@ -27,7 +27,8 @@ def compileAsmLinux(src_path, out_path):
 def compileCppLinux(src_path, out_path, includeDir):
     commands = [
         'clang++', 
-        '-ffreestanding','-nostdlib','-mno-red-zone','-fno-exceptions','-fno-rtti','-fno-builtin',
+        '-ffreestanding','-nostdlib', '-masm=intel', '-march=x86-64-v3',
+        '-mno-red-zone','-fno-exceptions','-fno-rtti','-fno-builtin',
         '-c', f'-I{includeDir}', # Include dir for headers
         src_path,
         '-o', out_path
@@ -102,6 +103,10 @@ if os.name == 'posix':
                 objFiles.append(str(obj))
 
         for file in (srcdir/platformDIR).rglob('*'):
+            if file.suffix == ".cpp": 
+                obj = buildSubdir / file.with_suffix(".o").name
+                compileCppLinux(str(file), str(obj), str(includeDir))
+                objFiles.append(str(obj))
             if file.suffix == ".asm": 
                 obj = buildSubdir / file.with_suffix(".o").name
                 compileAsmLinux(str(file) , str(obj))

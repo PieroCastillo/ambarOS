@@ -15,17 +15,19 @@ Notes:
 namespace Volta::Platform
 {
     /*
-    extern "C" void flushTLB();
-    extern "C" void flushTLBEntry(Address vaddr);
-    extern "C" void switchPageTableContext(Address addr);
+    inline void flushTLB();
+    inline void flushTLBEntry(Address vaddr);
+    inline void switchPageTableContext(Address addr);
 
-    extern "C" void enableInterrupts();
-    extern "C" void disableInterrupts();
+    inline void enableInterrupts();
+    inline void disableInterrupts();
     */
-    extern "C" void halt();
-
+    inline void halt() 
+    {
+        __asm__ __volatile__("hlt");
+    }
     /*
-    extern "C" void flushRegisters();
+    inline void flushRegisters();
     */
 }
 #endif // PLATFORM_HPP
