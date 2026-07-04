@@ -11,6 +11,8 @@ Description:
 #include "types.hpp"
 #include "platform.hpp"
 
+#define ambarOSfn extern "C"
+
 namespace Volta
 {
     /*

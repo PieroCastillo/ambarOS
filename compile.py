@@ -5,7 +5,6 @@ import shutil
 from pathlib import Path
 from collections import defaultdict
 
-
 # first compile asm files
 # next, c++ files
 # find all assembly sections
