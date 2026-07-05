@@ -2,6 +2,8 @@ set_project("ambarOS")
 set_version("0.1.0")
 set_xmakever("2.8.0")
 
+add_rules("mode.debug", "mode.release")
+
 local platform_dir = "platform/x86_64"
 local kernel_targets = {}
 
@@ -62,11 +64,18 @@ for _, srcdir in ipairs(os.dirs("src/*")) do
             )
 
             add_ldflags(
+                "-nostdlib",
                 "--nmagic",
                 "-m", "elf_x86_64",
                 "-T", linker,
                 {force = true}
             )
+
+            if is_mode("debug") then
+                add_cxxflags("-Og", {force = true})
+            elseif is_mode("release") then
+                add_cxxflags("-O3", {force = true})
+            end
 
             set_targetdir("bin")
             set_filename(name .. ".bin")

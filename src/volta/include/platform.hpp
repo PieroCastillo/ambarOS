@@ -22,10 +22,11 @@ namespace Volta::Platform
     inline void enableInterrupts();
     inline void disableInterrupts();
     */
-    inline void halt() 
+    inline void halt()
     {
         __asm__ __volatile__("hlt");
     }
+    
     /*
     inline void flushRegisters();
     */

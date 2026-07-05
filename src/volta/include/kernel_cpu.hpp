@@ -7,7 +7,7 @@ Kernel internal functions
 
 #include "types.hpp"
 
-namespace AmbarOS::Volta::Internal {
+namespace Volta {
     // extern "C" void setCR3();
 
     // extern "C" void vStoreRegisters();
