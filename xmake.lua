@@ -5,19 +5,27 @@ set_xmakever("2.8.0")
 local platform_dir = "platform/x86_64"
 local kernel_targets = {}
 
-local cxxflags = {
-    "-ffreestanding",
-    "-nostdlib",
-    "-nostartfiles",
-    "-nodefaultlibs",
-    "-masm=intel",
-    "-march=x86-64-v3",
-    "-mno-red-zone",
-    "-fno-exceptions",
-    "-fno-rtti",
-    "-fno-builtin",
-    "-std=c++2c"
-}
+rule("nasm.kernel")
+    set_extensions(".asm")
+    on_build_file(function (target, sourcefile, opt)
+        import("core.project.depend")
+
+        local obj = target:objectfile(sourcefile)
+
+        depend.on_changed(function ()
+            os.mkdir(path.directory(obj))
+            os.vrunv("nasm", {
+                "-f", "elf64",
+                sourcefile,
+                "-o", obj
+            })
+        end, {
+            files = sourcefile,
+            dependfile = obj .. ".d"
+        })
+
+        table.insert(target:objectfiles(), obj)
+    end)
 
 for _, srcdir in ipairs(os.dirs("src/*")) do
     local name = path.basename(srcdir)
@@ -27,48 +35,41 @@ for _, srcdir in ipairs(os.dirs("src/*")) do
         table.insert(kernel_targets, name)
 
         target(name)
-            set_kind("phony")
+            set_kind("binary")
+            set_toolchains("clang")
+            set_toolset("ld", "ld")
+            set_languages("c++26")
 
-            on_build(function ()
-                local builddir = path.join("build", name)
-                local binfile = path.join("bin", name .. ".bin")
-                local includedir = path.join(srcdir, "include")
-                local objfiles = {}
+            add_rules("nasm.kernel")
 
-                os.mkdir(builddir)
-                os.mkdir("bin")
+            add_files(path.join(srcdir, "**.cpp"))
+            add_files(path.join(srcdir, platform_dir, "**.asm"))
 
-                for _, file in ipairs(os.files(path.join(srcdir, "**.cpp"))) do
-                    local obj = path.join(builddir, path.basename(file) .. ".o")
-                    os.vrunv("clang++", table.join(cxxflags, {
-                        "-c",
-                        "-I" .. includedir,
-                        file,
-                        "-o", obj
-                    }))
-                    table.insert(objfiles, obj)
-                end
+            add_includedirs(path.join(srcdir, "include"))
 
-                for _, file in ipairs(os.files(path.join(srcdir, platform_dir, "**.asm"))) do
-                    local obj = path.join(builddir, path.basename(file) .. ".o")
-                    os.vrunv("nasm", {
-                        "-f", "elf64",
-                        file,
-                        "-o", obj
-                    })
-                    table.insert(objfiles, obj)
-                end
+            add_cxxflags(
+                "-ffreestanding",
+                "-nostdlib",
+                "-nostartfiles",
+                "-nodefaultlibs",
+                "-masm=intel",
+                "-march=x86-64-v3",
+                "-mno-red-zone",
+                "-fno-exceptions",
+                "-fno-rtti",
+                "-fno-builtin",
+                {force = true}
+            )
 
-                os.vrunv("ld", table.join({
-                    "--nmagic",
-                    "-m", "elf_x86_64",
-                    "-T", linker
-                }, objfiles, {
-                    "-o", binfile
-                }))
+            add_ldflags(
+                "--nmagic",
+                "-m", "elf_x86_64",
+                "-T", linker,
+                {force = true}
+            )
 
-                print("[+] Linked: %s", binfile)
-            end)
+            set_targetdir("bin")
+            set_filename(name .. ".bin")
     end
 end
 
@@ -77,14 +78,24 @@ target("ambarOS")
     add_deps(table.unpack(kernel_targets))
 
     on_build(function ()
-        os.mkdir("bin/boot/grub")
-        os.mkdir("iso")
+        import("core.project.depend")
 
-        os.cp("grub.cfg", "bin/boot/grub/grub.cfg")
-        os.vrunv("sh", {"./check.sh"})
-        os.vrunv("grub-mkrescue", {"-o", "iso/ambarOS.iso", "bin"})
+        depend.on_changed(function ()
+            os.mkdir("bin/boot/grub")
+            os.mkdir("iso")
 
-        print("[+] Created iso/ambarOS.iso")
+            os.cp("grub.cfg", "bin/boot/grub/grub.cfg")
+            os.vrunv("sh", {"./check.sh"})
+            os.vrunv("grub-mkrescue", {"-o", "iso/ambarOS.iso", "bin"})
+
+            print("[+] Created iso/ambarOS.iso")
+        end, {
+            files = table.join(
+                {"grub.cfg"},
+                table.wrap(os.files("bin/*.bin"))
+            ),
+            dependfile = "build/ambarOS.iso.d"
+        })
     end)
 
     on_run(function ()
