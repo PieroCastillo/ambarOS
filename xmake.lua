@@ -2,32 +2,20 @@ set_project("ambarOS")
 set_version("0.1.0")
 set_xmakever("2.8.0")
 
+includes("rules/*.lua")
 add_rules("mode.debug", "mode.release")
+
+ if is_arch("x64", "x86_64") then
+    add_defines("ARCH_x86_64")
+elseif is_arch("arm64", "aarch64") then
+    add_defines("ARCH_ARM64")
+    error("ARM64 is not supported yet, use x64")
+elseif is_arch("x86", "i386") then
+    error("x86 is not supported, use x64")
+end
 
 local platform_dir = "platform/x86_64"
 local kernel_targets = {}
-
-rule("nasm.kernel")
-    set_extensions(".asm")
-    on_build_file(function (target, sourcefile, opt)
-        import("core.project.depend")
-
-        local obj = target:objectfile(sourcefile)
-
-        depend.on_changed(function ()
-            os.mkdir(path.directory(obj))
-            os.vrunv("nasm", {
-                "-f", "elf64",
-                sourcefile,
-                "-o", obj
-            })
-        end, {
-            files = sourcefile,
-            dependfile = obj .. ".d"
-        })
-
-        table.insert(target:objectfiles(), obj)
-    end)
 
 for _, srcdir in ipairs(os.dirs("src/*")) do
     local name = path.basename(srcdir)
@@ -44,7 +32,8 @@ for _, srcdir in ipairs(os.dirs("src/*")) do
 
             add_rules("nasm.kernel")
 
-            add_files(path.join(srcdir, "**.cpp"))
+            add_files(path.join(srcdir, "**.cpp") .. "|" .. path.join(platform_dir, "**.cpp"))
+            add_files(path.join(srcdir, platform_dir, "**.cpp"))
             add_files(path.join(srcdir, platform_dir, "**.asm"))
 
             add_includedirs(path.join(srcdir, "include"))
@@ -64,11 +53,9 @@ for _, srcdir in ipairs(os.dirs("src/*")) do
             )
 
             add_ldflags(
-                "-nostdlib",
-                "--nmagic",
-                "-m", "elf_x86_64",
-                "-T", linker,
-                {force = true}
+                "-nostdlib", "--nmagic",
+                "-m",  "elf_x86_64",
+                "-T", linker, {force = true}
             )
 
             if is_mode("debug") then
