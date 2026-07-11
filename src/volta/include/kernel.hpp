@@ -15,11 +15,21 @@ Description:
 
 namespace Volta
 {
-    /*
-    auto vAllocatePage(uint32_t count, uint32_t flags) -> Address;
-    auto vReleasePage(Address vAddress) -> ResultType;
+    using PhysicalAddress = uint64_t;
+    using VirtualAddress = uint64_t;
 
+    enum class PageFlags : uint8_t
+    {
+        None,
+    };
 
-    */
+    auto allocPages(uint64_t count) -> PhysicalAddress;
+    void freePages(PhysicalAddress pAddr, uint64_t count);
+
+    auto reserve(uint64_t count) -> VirtualAddress;
+    void release(VirtualAddress vAddr, uint64_t count);
+
+    void map(VirtualAddress vAddr, PhysicalAddress pAddr, PageFlags flags);
+    void unmap(VirtualAddress vAddr);
 }
 #endif // KERNEL_HPP
